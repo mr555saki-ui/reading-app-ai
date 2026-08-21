@@ -10,32 +10,55 @@ export default async function handler(req, res) {
     });
   }
 
-  // 最新の利用可能モデルリスト
   const candidateModels = [
-    "gemini-3.6-flash",
-    "gemini-3.1-pro-preview"
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.5-pro"
   ];
 
   const { profile } = req.body || {};
 
+  // トピックの多様化シード
+  const seedKeywords = [
+    "deep sea creatures", "coffee culture & biology", "sleep cycles & dreaming",
+    "architecture & city secrets", "ancient inventions", "plant communication",
+    "cognitive biases in shopping", "space exploration challenges", "memory tricks",
+    "bird intelligence", "sound and psychology", "food science & fermentation",
+    "microbiome & gut health", "subtle body language", "origins of everyday idioms",
+    "animal navigation skills", "history of everyday tools", "neuroscience of habits"
+  ];
+  const randomSeed = seedKeywords[Math.floor(Math.random() * seedKeywords.length)];
+
+  // 復習対象（過去に学習して一定間隔が空いたもの）の選定
+  const dueReviewPhrases = (profile?.dueReviews || []).slice(0, 2);
+
   const prompt = `あなたは日本人学習者向けの「英語読解・チャンク処理特化型コーチ」です。
 【学習者の特性と目標】
-- 目標: 「1単語ずつ日本語に訳す」のを脱却し、「英語を意味のまとまり（チャンク）で前から直接処理する」状態。
-- 得意: 文構造の把握、文脈からの推測、考える問題やクイズを解くこと。
-- 課題: 単語想起速度の遅さ、熟語・コロケーションの弱さ、目が滑って戻り読みしてしまう癖。
-- 方針: 大量暗記は禁止。1セッション15〜25分。過去につまずいた表現を新しい文脈で自然に再登場させて定着させる。
+- 目標: 英語を意味のまとまり（チャンク）で前から直接処理する。
+- 課題: 単語想起速度の遅さ、熟語・コロケーションの弱さ、戻り読みの癖。
 
-【過去の学習履歴・弱点データ】
-${JSON.stringify(profile || {}, null, 2)}
+【重要：分散復習（Spaced Repetition）の必須ルール】
+${dueReviewPhrases.length > 0 ? `
+以下の「過去につまずき、時間が経って復習タイミングを迎えた表現」を【必ず1〜2個自然に長文および短文に組み込んで】ください。
+■ 今回の復習対象表現:
+${dueReviewPhrases.map(p => `- ${p}`).join('\n')}
+※ これらを新しい文脈・ストーリーの中で自然に使わせることで、記憶の定着を図ります。
+` : `
+過去の復習対象がまだないため、魅力的で実用的な新しいコロケーションを選出してください。
+`}
+
+【コロケーションの多様性ルール】
+- 頻出テンプレ表現（play a key role in, pay attention to 等）の単調な繰り返しは厳禁。
+- 「${randomSeed}」に関する知的で面白い雑学やエピソードを展開してください。
 
 【生成ルール】
-1. topic: 学習者が興味を持てる話題（心理学、動物行動学、脳科学、社会現象、テクノロジーなど）。
-2. warmups: 3〜4文。短文とターゲットとなるコロケーション（単語単体ではなく複数語のまとまり）。
-3. passage: 5〜7文のミニ長文。少し歯ごたえがあるが文脈推測できるレベル。
-4. passageChunks: ミニ長文を、前から読み進められる自然な意味のまとまり（チャンク）に分割した配列。
-5. keyCollocations: 今回の文章で特に重要なコロケーション（2〜4個）と日本語解説。過去の弱点表現があれば1〜2個自然に組み込むこと。
+1. topic: 具体的で知的好奇心を刺激するタイトル。
+2. keyCollocations: 今回の長文で核となる重要なコロケーション（2〜3個）と日本語解説。復習対象を入れた場合はそれも含めること。
+3. warmups: 3〜4文。keyCollocations を使った短文。
+4. passage: 5〜7文のミニ長文。知的で面白い内容にし、keyCollocations を自然に含めること。
+5. passageChunks: ミニ長文を、前から読み進められる自然な意味のまとまり（チャンク）に分割した配列。
 6. questions: 読解理解クイズ2問。各問に選択肢3つ、正解インデックス(0始まり)、日本語の解説をつける。
-7. reviewTargets: 今回再登場させた復習表現のリスト。
+7. reviewTargets: 今回実際に復習として再登場させた表現のリスト（なければ空配列）。
 
 必ず指定されたJSONスキーマに準拠して出力してください。`;
 
@@ -97,7 +120,7 @@ ${JSON.stringify(profile || {}, null, 2)}
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: responseSchema,
-      temperature: 0.6,
+      temperature: 0.9,
       maxOutputTokens: 3500
     }
   };
@@ -123,13 +146,10 @@ ${JSON.stringify(profile || {}, null, 2)}
       }
 
       lastError = data?.error?.message || `Model ${model} failed`;
-      console.warn(`Model ${model} error: ${lastError}`);
     } catch (e) {
       lastError = e.message;
     }
   }
 
-  return res.status(500).json({
-    error: `教材生成に失敗しました: ${lastError}`
-  });
+  return res.status(500).json({ error: `教材生成に失敗しました: ${lastError}` });
 }
