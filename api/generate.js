@@ -10,11 +10,10 @@ export default async function handler(req, res) {
     });
   }
 
-  // 混雑時に自動で試すモデルの優先順位リスト
+  // 最新の利用可能モデルリスト
   const candidateModels = [
-    process.env.GEMINI_MODEL || "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-2.5-pro"
+    "gemini-3.6-flash",
+    "gemini-3.1-pro-preview"
   ];
 
   const { profile } = req.body || {};
@@ -105,7 +104,6 @@ ${JSON.stringify(profile || {}, null, 2)}
 
   let lastError = null;
 
-  // 混雑時は順に別モデルへ切り替えてリトライ
   for (const model of candidateModels) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
@@ -125,14 +123,13 @@ ${JSON.stringify(profile || {}, null, 2)}
       }
 
       lastError = data?.error?.message || `Model ${model} failed`;
-      // 混雑エラー等の場合は次のモデルを試行
-      console.warn(`Model ${model} returned error: ${lastError}. Trying next model...`);
+      console.warn(`Model ${model} error: ${lastError}`);
     } catch (e) {
       lastError = e.message;
     }
   }
 
-  return res.status(503).json({
-    error: `AIサーバーが混雑しています。10〜20秒ほど置いて再読み込みしてください。（詳細: ${lastError}）`
+  return res.status(500).json({
+    error: `教材生成に失敗しました: ${lastError}`
   });
 }
