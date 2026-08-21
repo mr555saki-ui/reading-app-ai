@@ -16,8 +16,6 @@
     --accent: #10b981;
     --accent-light: #dcfce7;
     --border: #e2e8f0;
-    --warning: #f59e0b;
-    --danger: #ef4444;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
@@ -166,7 +164,8 @@
     margin-top: 16px;
     font-size: 12px;
   }
-  .tag { display: inline-block; padding: 2px 8px; background: #e2e8f0; border-radius: 12px; font-size: 11px; margin: 2px; }
+  .tag { display: inline-block; padding: 3px 8px; background: #e2e8f0; border-radius: 12px; font-size: 11px; margin: 2px; }
+  .tag-review { background: #fed7aa; color: #9a3412; font-weight: bold; }
   .spinner {
     border: 3px solid #f3f3f3;
     border-top: 3px solid var(--primary);
@@ -187,24 +186,23 @@
     <p>語彙インプット ➔ 初見読解 ➔ 解説 ➔ 再読</p>
   </div>
 
-  <!-- LOADING -->
   <div id="step-loading" class="card">
     <div class="spinner"></div>
-    <p id="loading-msg" style="text-align:center; font-size:14px; color:var(--text-muted);">AIが今回の教材を生成中…</p>
+    <p id="loading-msg" style="text-align:center; font-size:14px; color:var(--text-muted);">AIが復習表現を含めた教材を生成中…</p>
   </div>
 
-  <!-- STEP 1: COLLOCATION FIRST -->
+  <!-- STEP 1 -->
   <div id="step1" class="card hidden">
     <span class="topic-tag" id="step1-topic">Topic</span>
     <span class="step-badge">STEP 1 / 6 : 重要コロケーションの予習</span>
     <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
-      まずは今回の文章でカギとなる「意味のかたまり」の意味を確認しましょう。
+      今回の文章でカギとなる「意味のかたまり」の意味を確認しましょう。
     </p>
     <div id="collocation-list-step1"></div>
     <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="goToStep2()">意味を確認した ➔ 短文チェックへ</button>
   </div>
 
-  <!-- STEP 2: WARMUP -->
+  <!-- STEP 2 -->
   <div id="step2" class="card hidden">
     <span class="step-badge">STEP 2 / 6 : 短文チェック</span>
     <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
@@ -222,7 +220,7 @@
     </div>
   </div>
 
-  <!-- STEP 3: FIRST READING -->
+  <!-- STEP 3 -->
   <div id="step3" class="card hidden">
     <span class="step-badge">STEP 3 / 6 : 1回目の読解 (初見)</span>
     <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
@@ -243,7 +241,7 @@
     <button id="btn-finish-read1" class="btn btn-primary" style="width:100%;" onclick="finishReading1()">読み終わった！</button>
   </div>
 
-  <!-- STEP 4: ANALYSIS & DETAILED COLLOCATIONS -->
+  <!-- STEP 4 -->
   <div id="step4" class="card hidden">
     <span class="step-badge">STEP 4 / 6 : つまずき分析 & 表現の解説</span>
     <div id="read1-summary" style="font-size:15px; font-weight:700; color:var(--primary-dark); margin-bottom:12px;"></div>
@@ -264,7 +262,7 @@
     <button id="btn-to-step5" class="btn btn-primary" style="width:100%;" onclick="goToStep5()" disabled>感覚を選んで STEP 5 (再読) へ</button>
   </div>
 
-  <!-- STEP 5: RE-READ -->
+  <!-- STEP 5 -->
   <div id="step5" class="card hidden">
     <span class="step-badge">STEP 5 / 6 : 2回目の読解 (再読)</span>
     <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
@@ -285,7 +283,7 @@
     <button class="btn btn-primary" style="width:100%;" onclick="finishReading2()">読み終わった！</button>
   </div>
 
-  <!-- STEP 6: QUIZ -->
+  <!-- STEP 6 -->
   <div id="step6" class="card hidden">
     <span class="step-badge">STEP 6 / 6 : 内容理解クイズ</span>
     <div id="speed-diff" style="font-size: 13px; color: #166534; background:#dcfce7; padding:10px 12px; border-radius:10px; margin-bottom:14px; font-weight:bold;"></div>
@@ -302,17 +300,17 @@
   <div id="step-complete" class="card hidden" style="text-align:center;">
     <h2 style="color:var(--accent); margin-top:0; font-size:20px;">🎉 セッション完了！</h2>
     <p style="font-size:13px; color:var(--text-muted);">
-      今回のつまずきと読解速度データが蓄積されました。<br>
-      苦手な表現は次回のAI教材に自然に再登場します。
+      今回の弱点・復習データが更新されました。<br>
+      忘れた頃に別の新しいストーリーの中で自動再出題されます。
     </p>
     <div style="background:#f8fafc; padding:12px; border-radius:12px; font-size:13px; margin:14px 0; border:1px solid var(--border);" id="session-summary-box"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="init()">次のAIセッションを生成する</button>
   </div>
 
-  <!-- WEAKNESS DASHBOARD -->
+  <!-- DASHBOARD -->
   <div class="dashboard-card" id="dashboard">
     <div style="font-weight:700; color:var(--text-muted); margin-bottom:6px; display:flex; justify-content:space-between;">
-      <span>📊 学習履歴 & 弱点ストック</span>
+      <span>📊 学習データ & 復習ストック</span>
       <span id="session-count-label">セッション数: 0</span>
     </div>
     <div id="weak-phrases-list" style="margin-top:6px; color:var(--text-muted);">まだ学習データがありません</div>
@@ -320,12 +318,12 @@
 </div>
 
 <script>
-const STORE = "english_reading_trainer_v6";
+const STORE = "english_reading_trainer_spaced_v7";
 let state = JSON.parse(localStorage.getItem(STORE) || "null") || {
   sessions: 0,
   level: 2,
   weak: { vocabulary: 0, retrieval: 0, back: 0, slip: 0, hold: 0 },
-  phrases: {},
+  phrasesData: {}, // { phrase: { score: 3, lastSession: 1, lastDate: timestamp } }
   history: []
 };
 
@@ -345,14 +343,35 @@ function save() {
   renderDashboard();
 }
 
+// 復習タイミングを迎えている表現を抽出（直近すぎず、2セッション以上経過したもの）
+function getDueReviewPhrases() {
+  const currentSess = state.sessions || 0;
+  const list = [];
+  for (const [phrase, info] of Object.entries(state.phrasesData || {})) {
+    if (info.score > 0) {
+      const sessDiff = currentSess - (info.lastSession || 0);
+      // 2セッション以上経過しているものを対象
+      if (sessDiff >= 2) {
+        list.push({ phrase, priority: info.score * 2 + sessDiff });
+      }
+    }
+  }
+  return list.sort((a,b) => b.priority - a.priority).map(x => x.phrase);
+}
+
 function renderDashboard() {
   document.getElementById('session-count-label').innerText = `セッション数: ${state.sessions}`;
   const listEl = document.getElementById('weak-phrases-list');
-  const sorted = Object.entries(state.phrases || {}).sort((a,b) => b[1] - a[1]).filter(x => x[1] > 0);
-  if (sorted.length === 0) {
-    listEl.innerHTML = 'まだ弱点データはありません。学習を進めると蓄積されます。';
+  const activePhrases = Object.entries(state.phrasesData || {}).filter(([p, info]) => info.score > 0);
+  
+  if (activePhrases.length === 0) {
+    listEl.innerHTML = 'まだ弱点ストックはありません。';
   } else {
-    listEl.innerHTML = '<b>復習優先コロケーション:</b><br>' + sorted.slice(0, 8).map(([p, score]) => `<span class="tag">${escapeHtml(p)} (${score}pt)</span>`).join(' ');
+    const dues = new Set(getDueReviewPhrases());
+    listEl.innerHTML = '<b>復習管理リスト:</b><br>' + activePhrases.map(([p, info]) => {
+      const isDue = dues.has(p);
+      return `<span class="tag ${isDue ? 'tag-review' : ''}">${escapeHtml(p)} (${info.score}pt${isDue ? '・復習待機中' : ''})</span>`;
+    }).join(' ');
   }
 }
 
@@ -371,17 +390,18 @@ async function init() {
   renderDashboard();
 
   try {
+    const dueReviews = getDueReviewPhrases();
     const profile = {
       level: state.level,
       weaknesses: state.weak,
-      phrases: Object.entries(state.phrases).sort((a,b)=>b[1]-a[1]).slice(0, 15),
+      dueReviews: dueReviews,
       history: (state.history || []).slice(-6)
     };
 
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profile, task: 'adaptive reading session' })
+      body: JSON.stringify({ profile, task: 'spaced repetition session' })
     });
 
     if (!res.ok) {
@@ -433,16 +453,7 @@ function renderWarmup() {
 function prevWarmup() {
   if (currentWarmupIndex > 0) {
     currentWarmupIndex--;
-    const lastRated = userWarmupRates.pop();
-    if (lastRated) {
-      if (lastRated.rate === '×') {
-        state.weak.vocabulary = Math.max(0, (state.weak.vocabulary || 0) - 1);
-        state.phrases[lastRated.collocation] = Math.max(0, (state.phrases[lastRated.collocation] || 0) - 3);
-      } else if (lastRated.rate === '△') {
-        state.weak.retrieval = Math.max(0, (state.weak.retrieval || 0) - 1);
-        state.phrases[lastRated.collocation] = Math.max(0, (state.phrases[lastRated.collocation] || 0) - 2);
-      }
-    }
+    userWarmupRates.pop();
     renderWarmup();
   }
 }
@@ -451,14 +462,23 @@ function rateWarmup(rate) {
   const w = lesson.warmups[currentWarmupIndex];
   userWarmupRates.push({ ...w, rate });
 
+  if (!state.phrasesData[w.collocation]) {
+    state.phrasesData[w.collocation] = { score: 0, lastSession: state.sessions, lastDate: Date.now() };
+  }
+
+  const item = state.phrasesData[w.collocation];
+  item.lastSession = state.sessions;
+  item.lastDate = Date.now();
+
   if (rate === '×') {
     state.weak.vocabulary = (state.weak.vocabulary || 0) + 1;
-    state.phrases[w.collocation] = (state.phrases[w.collocation] || 0) + 3;
+    item.score += 3;
   } else if (rate === '△') {
     state.weak.retrieval = (state.weak.retrieval || 0) + 1;
-    state.phrases[w.collocation] = (state.phrases[w.collocation] || 0) + 2;
+    item.score += 2;
   } else {
-    state.phrases[w.collocation] = Math.max(0, (state.phrases[w.collocation] || 0) - 1);
+    // ◎の場合は克服へ向けてスコア減算
+    item.score = Math.max(0, item.score - 2);
   }
   save();
 
@@ -542,7 +562,6 @@ function finishReading1() {
 
   document.getElementById('read1-summary').innerText = `1回目の読解タイム: ${time1}秒`;
   
-  // Render detailed collocations in Step 4
   const colBox = document.getElementById('step4-collocation-items');
   colBox.innerHTML = (lesson.keyCollocations || []).map(c => `
     <div style="margin-bottom:8px;">
@@ -677,11 +696,16 @@ function finishSession() {
   setHidden('step6', true);
   setHidden('step-complete', false);
 
+  const reviewUsed = (lesson.reviewTargets && lesson.reviewTargets.length > 0)
+    ? `<br>🔄 <b>今回復習した表現:</b> ${lesson.reviewTargets.map(t => escapeHtml(t)).join(', ')}`
+    : '';
+
   document.getElementById('session-summary-box').innerHTML = `
     <b>📊 本日のスコア</b><br>
     トピック: <b>${escapeHtml(lesson.topic || "英語読解")}</b><br>
     初見読解: <b>${time1}秒</b> ➔ 再読: <b>${time2}秒</b><br>
     処理速度改善率: <b>${Math.round((1 - time2/Math.max(time1,1))*100)}% 短縮</b>
+    ${reviewUsed}
   `;
 }
 
