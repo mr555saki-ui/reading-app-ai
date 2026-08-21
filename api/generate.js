@@ -10,12 +10,12 @@ export default async function handler(req, res) {
     });
   }
 
+ // 変更後
   const candidateModels = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-2.5-pro"
+    "gemini-3.6-flash",
+    "gemini-3.1-pro-preview"
   ];
-
+  
   const { profile } = req.body || {};
 
   // トピックの多様化シード
