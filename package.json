@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Chunk Reading Trainer</title>
+<style>
+  :root {
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #eff6ff;
+    --accent: #10b981;
+    --accent-light: #dcfce7;
+    --border: #e2e8f0;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    padding: 16px 12px 60px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    font-size: 20px;
+    margin: 0 0 4px 0;
+    color: var(--primary-dark);
+    font-weight: 700;
+  }
+  .header p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .card {
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .step-badge {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .topic-tag {
+    float: right;
+    font-size: 11px;
+    background: #f1f5f9;
+    color: var(--text-muted);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  .sentence-box {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.55;
+    margin: 12px 0 16px;
+    padding: 14px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+    word-break: break-word;
+  }
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .btn {
+    flex: 1;
+    padding: 12px 6px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.1s, opacity 0.15s;
+    user-select: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-secondary { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+  .btn-rate-good { background: #dcfce7; color: #166534; }
+  .btn-rate-mid { background: #fef3c7; color: #92400e; }
+  .btn-rate-bad { background: #fee2e2; color: #991b1b; }
+  .hidden { display: none !important; }
+  
+  .collocation-item {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+  .collocation-title {
+    font-weight: 700;
+    color: var(--primary-dark);
+    font-size: 15px;
+  }
+  .collocation-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .passage-box {
+    font-size: 16px;
+    line-height: 1.85;
+    background: #ffffff;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    min-height: 130px;
+    margin-bottom: 14px;
+    word-break: break-word;
+  }
+  .chunk-focus {
+    background: #fef08a;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .chunk-passed {
+    color: #94a3b8;
+  }
+  .chunk-next {
+    color: #cbd5e1;
+  }
+  .timer-display {
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .quiz-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    line-height: 1.4;
+  }
+  .quiz-option:active { background: #f1f5f9; }
+  .quiz-option.correct { background: #dcfce7 !important; border-color: #86efac; color: #166534; font-weight: bold; }
+  .quiz-option.wrong { background: #fee2e2 !important; border-color: #fca5a5; color: #991b1b; }
+  
+  .mode-toggle {
+    display: flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+  .mode-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 6px 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .mode-btn.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .dashboard-card {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 12px;
+    border-radius: 12px;
+    margin-top: 16px;
+    font-size: 12px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #e2e8f0;
+    border-radius: 12px;
+    font-size: 11px;
+    margin: 2px;
+  }
+  .spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>英語 読解・チャンクトレーナー</h1>
+    <p>語彙・コロケーション × 前から処理トレーニング</p>
+  </div>
+
+  <!-- LOADING -->
+  <div id="step-loading" class="card">
+    <div class="spinner"></div>
+    <p id="loading-msg" style="text-align:center; font-size:14px; color:var(--text-muted);">本日の教材をAIが最適化して生成中…</p>
+  </div>
+
+  <!-- STEP 1: WARMUP -->
+  <div id="step1" class="card hidden">
+    <span class="topic-tag" id="step1-topic">Topic</span>
+    <span class="step-badge">STEP 1 / 6 : 短文ウォームアップ</span>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">辞書を使わず前から読み、理解度を評価してください。</p>
+    <div id="step1-sentence" class="sentence-box">Loading...</div>
+    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;" id="step1-progress">1 / 4</div>
+    <div class="btn-group">
+      <button class="btn btn-rate-good" onclick="rateWarmup('◎')">◎ スッと理解</button>
+      <button class="btn btn-rate-mid" onclick="rateWarmup('△')">△ 遅かった</button>
+      <button class="btn btn-rate-bad" onclick="rateWarmup('×')">× 不明</button>
+    </div>
+    <div style="margin-top: 10px; text-align: right;">
+      <button id="btn-warmup-back" class="btn btn-secondary" style="width: auto; padding: 6px 14px; font-size: 12px;" onclick="prevWarmup()" disabled>← 1問前に戻る</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: COLLOCATIONS -->
+  <div id="step2" class="card hidden">
+    <span class="step-badge">STEP 2 / 6 : コロケーション確認</span>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">単語単体ではなく「意味のかたまり」で定着させます。</p>
+    <div id="collocation-list"></div>
+    <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="goToStep3()">STEP 3 (初見読解) へ進む</button>
+  </div>
+
+  <!-- STEP 3: FIRST READING -->
+  <div id="step3" class="card hidden">
+    <span class="step-badge">STEP 3 / 6 : 1回目の読解 (初見)</span>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
+      戻り読みをせず、推測しながら前から一気に読んでください。
+    </p>
+    
+    <div class="mode-toggle">
+      <button id="mode-normal-3" class="mode-btn active" onclick="switchReadingMode(3, 'normal')">全文表示</button>
+      <button id="mode-chunk-3" class="mode-btn" onclick="switchReadingMode(3, 'chunk')">チャンク送り(戻り防止)</button>
+    </div>
+
+    <div class="timer-display" id="timer3">00:00</div>
+    <div class="passage-box" id="passage-step3" onclick="advanceChunk(3)"></div>
+    <div id="chunk-controls-3" style="display:flex; justify-content:space-between; margin-bottom:12px;" class="hidden">
+      <button class="btn btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="prevChunk(3)">← 1チャンク戻る</button>
+      <button class="btn btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="advanceChunk(3)">次へ進む →</button>
+    </div>
+    <button id="btn-finish-read1" class="btn btn-primary" style="width:100%;" onclick="finishReading1()">読み終わった！</button>
+  </div>
+
+  <!-- STEP 4: ANALYSIS & REFLECTION -->
+  <div id="step4" class="card hidden">
+    <span class="step-badge">STEP 4 / 6 : つまずき分析</span>
+    <div id="read1-summary" style="font-size:15px; font-weight:700; color:var(--primary-dark); margin-bottom:12px;"></div>
+    
+    <p style="font-size: 13px; color: var(--text-muted); margin:0 0 8px 0;"><b>1回目の読解で、一番近かった感覚はどれですか？</b></p>
+    <div style="display:grid; gap:8px; margin-bottom:16px;">
+      <button class="quiz-option" onclick="recordReflection('smooth', this)">✨ ほぼ前からスムーズに意味が入った</button>
+      <button class="quiz-option" onclick="recordReflection('back', this)">🔄 単語や文構造が気になって前に戻った</button>
+      <button class="quiz-option" onclick="recordReflection('slip', this)">💨 目が先に滑って意味処理が追いつかなかった</button>
+      <button class="quiz-option" onclick="recordReflection('hold', this)">🧩 前半の内容を忘れて読み直した</button>
+    </div>
+
+    <div style="font-size: 13px; background:#eff6ff; padding:12px; border-radius:10px; margin-bottom:14px;" id="step4-collocations">
+      <b>📌 重要表現のおさらい:</b>
+      <div id="step4-collocation-items" style="margin-top:6px;"></div>
+    </div>
+
+    <button id="btn-to-step5" class="btn btn-primary" style="width:100%;" onclick="goToStep5()" disabled>感覚を選んで STEP 5 へ</button>
+  </div>
+
+  <!-- STEP 5: RE-READ -->
+  <div id="step5" class="card hidden">
+    <span class="step-badge">STEP 5 / 6 : 2回目の読解 (再読)</span>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
+      1回目より「速く・楽に意味が入ってくる感覚」を味わってください。
+    </p>
+
+    <div class="mode-toggle">
+      <button id="mode-normal-5" class="mode-btn active" onclick="switchReadingMode(5, 'normal')">全文表示</button>
+      <button id="mode-chunk-5" class="mode-btn" onclick="switchReadingMode(5, 'chunk')">チャンク送り(戻り防止)</button>
+    </div>
+
+    <div class="timer-display" id="timer5">00:00</div>
+    <div class="passage-box" id="passage-step5" onclick="advanceChunk(5)"></div>
+    <div id="chunk-controls-5" style="display:flex; justify-content:space-between; margin-bottom:12px;" class="hidden">
+      <button class="btn btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="prevChunk(5)">← 1チャンク戻る</button>
+      <button class="btn btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="advanceChunk(5)">次へ進む →</button>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="finishReading2()">読み終わった！</button>
+  </div>
+
+  <!-- STEP 6: QUIZ -->
+  <div id="step6" class="card hidden">
+    <span class="step-badge">STEP 6 / 6 : 内容理解クイズ</span>
+    <div id="speed-diff" style="font-size: 13px; color: #166534; background:#dcfce7; padding:10px 12px; border-radius:10px; margin-bottom:14px; font-weight:bold;"></div>
+    <div id="quiz-container">
+      <p id="quiz-progress" style="font-size:12px; color:var(--text-muted); margin:0 0 4px 0;">問 1 / 2</p>
+      <p id="quiz-question" style="font-weight:700; font-size:15px; margin-top:0;"></p>
+      <div id="quiz-options"></div>
+      <div id="quiz-explanation" style="display:none; font-size:13px; background:#f1f5f9; padding:10px; border-radius:8px; margin-top:10px;"></div>
+      <button id="btn-next-quiz" class="btn btn-primary hidden" style="width:100%; margin-top:12px;" onclick="nextQuiz()">次の問題へ</button>
+    </div>
+  </div>
+
+  <!-- COMPLETE -->
+  <div id="step-complete" class="card hidden" style="text-align:center;">
+    <h2 style="color:var(--accent); margin-top:0; font-size:20px;">🎉 本日のセッション完了！</h2>
+    <p style="font-size:13px; color:var(--text-muted); line-height:1.6;">
+      今回のつまずきと読解速度データが蓄積されました。<br>
+      苦手な表現は次回の英文に自然に再登場します。
+    </p>
+    <div style="background:#f8fafc; padding:12px; border-radius:12px; font-size:13px; margin:14px 0; border:1px solid var(--border);" id="session-summary-box"></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="init()">次のセッションを始める</button>
+  </div>
+
+  <!-- WEAKNESS DASHBOARD -->
+  <div class="dashboard-card" id="dashboard">
+    <div style="font-weight:700; color:var(--text-muted); margin-bottom:6px; display:flex; justify-content:space-between;">
+      <span>📊 学習履歴 & 弱点ストック</span>
+      <span id="session-count-label">セッション数: 0</span>
+    </div>
+    <div id="weak-phrases-list" style="margin-top:6px; color:var(--text-muted);">まだ学習データがありません</div>
+  </div>
+</div>
+
+<script>
+const STORE = "english_reading_trainer_v4";
+let state = JSON.parse(localStorage.getItem(STORE) || "null") || {
+  sessions: 0,
+  level: 2,
+  weak: { vocabulary: 0, retrieval: 0, back: 0, slip: 0, hold: 0 },
+  phrases: {}, // phrase: score
+  history: []
+};
+
+let lesson = null;
+let currentWarmupIndex = 0;
+let userWarmupRates = [];
+let timer3Interval, timer5Interval;
+let time1 = 0, time2 = 0;
+let startedAt = 0;
+let selectedReflection = null;
+let readingMode = { 3: 'normal', 5: 'normal' };
+let currentChunkIndex = { 3: 0, 5: 0 };
+let currentQuizIndex = 0;
+
+// Fallback content in case API is offline
+const fallbackLesson = {
+  topic: "注意力の回復と自然",
+  warmups: [
+    { text: "Spending time in nature is associated with improved cognitive function.", collocation: "be associated with", desc: "〜と関連している" },
+    { text: "Researchers found a significant difference in attention span after a brief walk.", collocation: "a significant difference", desc: "顕著な差・大きな違い" },
+    { text: "Continuous multitasking can lead to mental fatigue over time.", collocation: "lead to", desc: "〜を引き起こす・〜につながる" },
+    { text: "Participants showed a noticeable reduction in stress markers.", collocation: "a reduction in", desc: "〜の減少・低下" }
+  ],
+  passage: "Recent psychological studies suggest that even short interactions with natural environments can lead to meaningful restorative effects. When people walk in a park, researchers observe a significant difference in their ability to focus compared to walking down a noisy urban street. Furthermore, immersion in natural scenery is associated with a swift reduction in stress hormones. By regularly giving the brain a break from digital screens, individuals can cultivate mental resilience and sustain higher productivity.",
+  passageChunks: [
+    "Recent psychological studies suggest that",
+    "even short interactions with natural environments",
+    "can lead to meaningful restorative effects.",
+    "When people walk in a park,",
+    "researchers observe a significant difference",
+    "in their ability to focus",
+    "compared to walking down a noisy urban street.",
+    "Furthermore, immersion in natural scenery",
+    "is associated with a swift reduction",
+    "in stress hormones.",
+    "By regularly giving the brain a break",
+    "from digital screens,",
+    "individuals can cultivate mental resilience",
+    "and sustain higher productivity."
+  ],
+  keyCollocations: [
+    { collocation: "lead to ~", desc: "〜につながる・〜を引き起こす" },
+    { collocation: "a significant difference", desc: "著しい違い・有意差" },
+    { collocation: "be associated with ~", desc: "〜と関連している" },
+    { collocation: "a reduction in ~", desc: "〜の減少・低下" }
+  ],
+  questions: [
+    {
+      q: "According to the passage, what effect does walking in a park have compared to urban walking?",
+      options: [
+        "It significantly improves the ability to focus.",
+        "It increases the desire to use digital screens.",
+        "It causes mental fatigue more quickly."
+      ],
+      answer: 0,
+      explanation: "本文第2文「researchers observe a significant difference in their ability to focus...」より、集中力の改善が述べられています。"
+    },
+    {
+      q: "What is immersion in natural scenery associated with?",
+      options: [
+        "A sudden rise in blood pressure",
+        "A swift reduction in stress hormones",
+        "An increase in multitasking capacity"
+      ],
+      answer: 1,
+      explanation: "本文第3文「is associated with a swift reduction in stress hormones」より、ストレスホルモンの速やかな減少と関連しています。"
+    }
+  ],
+  reviewTargets: ["lead to", "be associated with"]
+};
+
+function save() {
+  localStorage.setItem(STORE, JSON.stringify(state));
+  renderDashboard();
+}
+
+function renderDashboard() {
+  document.getElementById('session-count-label').innerText = `セッション数: ${state.sessions}`;
+  const listEl = document.getElementById('weak-phrases-list');
+  const sorted = Object.entries(state.phrases || {}).sort((a,b) => b[1] - a[1]).filter(x => x[1] > 0);
+  if (sorted.length === 0) {
+    listEl.innerHTML = 'まだ弱点データはありません。トレーニングを進めるとここに蓄積されます。';
+  } else {
+    listEl.innerHTML = '<b>復習優先コロケーション:</b><br>' + sorted.slice(0, 8).map(([p, score]) => `<span class="tag">${escapeHtml(p)} (${score}pt)</span>`).join(' ');
+  }
+}
+
+function setHidden(id, hide) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('hidden', hide);
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+
+async function init() {
+  // Hide all main cards
+  ['step1','step2','step3','step4','step5','step6','step-complete'].forEach(id => setHidden(id, true));
+  setHidden('step-loading', false);
+  document.getElementById('loading-msg').innerText = '本日の教材をAIが最適化して生成中…';
+
+  renderDashboard();
+
+  try {
+    const profile = {
+      level: state.level,
+      weaknesses: state.weak,
+      phrases: Object.entries(state.phrases).sort((a,b)=>b[1]-a[1]).slice(0, 15),
+      history: (state.history || []).slice(-6)
+    };
+
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile, task: 'adaptive reading session' })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || '教材生成に失敗しました');
+    }
+
+    lesson = await res.json();
+  } catch (err) {
+    console.warn("Using fallback lesson:", err.message);
+    lesson = fallbackLesson;
+  }
+
+  setHidden('step-loading', true);
+  currentWarmupIndex = 0;
+  userWarmupRates = [];
+  renderWarmup();
+}
+
+function renderWarmup() {
+  setHidden('step1', false);
+  const w = lesson.warmups[currentWarmupIndex];
+  document.getElementById('step1-topic').innerText = lesson.topic || "英語読解";
+  document.getElementById('step1-sentence').innerText = w.text;
+  document.getElementById('step1-progress').innerText = `問題 ${currentWarmupIndex + 1} / ${lesson.warmups.length}`;
+  const backBtn = document.getElementById('btn-warmup-back');
+  if (backBtn) backBtn.disabled = (currentWarmupIndex === 0);
+}
+
+function prevWarmup() {
+  if (currentWarmupIndex > 0) {
+    currentWarmupIndex--;
+    const lastRated = userWarmupRates.pop();
+    // revert phrase score
+    if (lastRated) {
+      if (lastRated.rate === '×') {
+        state.weak.vocabulary = Math.max(0, (state.weak.vocabulary || 0) - 1);
+        state.phrases[lastRated.collocation] = Math.max(0, (state.phrases[lastRated.collocation] || 0) - 3);
+      } else if (lastRated.rate === '△') {
+        state.weak.retrieval = Math.max(0, (state.weak.retrieval || 0) - 1);
+        state.phrases[lastRated.collocation] = Math.max(0, (state.phrases[lastRated.collocation] || 0) - 2);
+      }
+    }
+    renderWarmup();
+  }
+}
+
+function prevChunk(step) {
+  if (readingMode[step] !== 'chunk') return;
+  if (currentChunkIndex[step] > 0) {
+    currentChunkIndex[step]--;
+    renderPassage(step);
+  }
+}
+
+
+function rateWarmup(rate) {
+  const w = lesson.warmups[currentWarmupIndex];
+  userWarmupRates.push({ ...w, rate });
+
+  if (rate === '×') {
+    state.weak.vocabulary = (state.weak.vocabulary || 0) + 1;
+    state.phrases[w.collocation] = (state.phrases[w.collocation] || 0) + 3;
+  } else if (rate === '△') {
+    state.weak.retrieval = (state.weak.retrieval || 0) + 1;
+    state.phrases[w.collocation] = (state.phrases[w.collocation] || 0) + 2;
+  } else {
+    state.phrases[w.collocation] = Math.max(0, (state.phrases[w.collocation] || 0) - 1);
+  }
+  save();
+
+  currentWarmupIndex++;
+  if (currentWarmupIndex < lesson.warmups.length) {
+    renderWarmup();
+  } else {
+    showStep2();
+  }
+}
+
+function showStep2() {
+  setHidden('step1', true);
+  setHidden('step2', false);
+
+  const list = document.getElementById('collocation-list');
+  list.innerHTML = '';
+
+  const focusList = userWarmupRates.filter(x => x.rate !== '◎');
+  const itemsToShow = (focusList.length > 0 ? focusList : lesson.warmups).slice(0, 4);
+
+  itemsToShow.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'collocation-item';
+    div.innerHTML = `<div class="collocation-title">${escapeHtml(item.collocation)}</div><div class="collocation-desc">${escapeHtml(item.desc)}</div>`;
+    list.appendChild(div);
+  });
+}
+
+function switchReadingMode(step, mode) {
+  readingMode[step] = mode;
+  document.getElementById(`mode-normal-${step}`).classList.toggle('active', mode === 'normal');
+  document.getElementById(`mode-chunk-${step}`).classList.toggle('active', mode === 'chunk');
+  const ctrl = document.getElementById(`chunk-controls-${step}`);
+  if (ctrl) ctrl.classList.toggle('hidden', mode !== 'chunk');
+  currentChunkIndex[step] = 0;
+  renderPassage(step);
+}
+
+function renderPassage(step) {
+  const box = document.getElementById(`passage-step${step}`);
+  if (readingMode[step] === 'normal') {
+    box.innerHTML = escapeHtml(lesson.passage);
+  } else {
+    const chunks = lesson.passageChunks && lesson.passageChunks.length > 0
+      ? lesson.passageChunks
+      : lesson.passage.split(/(?<=[.?!])\s+/);
+    
+    let html = '';
+    chunks.forEach((c, idx) => {
+      if (idx < currentChunkIndex[step]) {
+        html += `<span class="chunk-passed">${escapeHtml(c)}</span> / `;
+      } else if (idx === currentChunkIndex[step]) {
+        html += `<span class="chunk-focus">${escapeHtml(c)}</span> `;
+      } else {
+        html += `<span class="chunk-next">...</span> `;
+      }
+    });
+    box.innerHTML = html + `<div style="font-size:11px; color:#64748b; margin-top:8px; text-align:center;">👉 タップすると次のチャンクへ進みます</div>`;
+  }
+}
+
+function advanceChunk(step) {
+  if (readingMode[step] !== 'chunk') return;
+  const chunks = lesson.passageChunks || [];
+  if (currentChunkIndex[step] < chunks.length - 1) {
+    currentChunkIndex[step]++;
+    renderPassage(step);
+  }
+}
+
+function goToStep3() {
+  setHidden('step2', true);
+  setHidden('step3', false);
+  currentChunkIndex[3] = 0;
+  renderPassage(3);
+
+  time1 = 0;
+  startedAt = Date.now();
+  clearInterval(timer3Interval);
+  timer3Interval = setInterval(() => {
+    time1 = Math.floor((Date.now() - startedAt) / 1000);
+    document.getElementById('timer3').innerText = formatTime(time1);
+  }, 250);
+}
+
+function finishReading1() {
+  clearInterval(timer3Interval);
+  setHidden('step3', true);
+  setHidden('step4', false);
+
+  document.getElementById('read1-summary').innerText = `1回目の読解タイム: ${time1}秒`;
+  
+  // Render dynamic collocations
+  const colBox = document.getElementById('step4-collocation-items');
+  colBox.innerHTML = (lesson.keyCollocations || []).map(c => `<div>・<b style="color:#1d4ed8;">${escapeHtml(c.collocation)}</b> : ${escapeHtml(c.desc)}</div>`).join('');
+
+  // Reset button state
+  selectedReflection = null;
+  const btn = document.getElementById('btn-to-step5');
+  btn.disabled = true;
+  btn.innerText = '感覚を選んで STEP 5 へ';
+  document.querySelectorAll('#step4 .quiz-option').forEach(b => b.classList.remove('correct'));
+}
+
+function recordReflection(type, btnEl) {
+  selectedReflection = type;
+  state.weak[type] = (state.weak[type] || 0) + 1;
+  save();
+
+  document.querySelectorAll('#step4 .quiz-option').forEach(b => b.classList.remove('correct'));
+  btnEl.classList.add('correct');
+
+  const nextBtn = document.getElementById('btn-to-step5');
+  nextBtn.disabled = false;
+  nextBtn.innerText = 'STEP 5 (再読: スピード確認) へ進む';
+}
+
+function goToStep5() {
+  setHidden('step4', true);
+  setHidden('step5', false);
+  currentChunkIndex[5] = 0;
+  renderPassage(5);
+
+  time2 = 0;
+  startedAt = Date.now();
+  clearInterval(timer5Interval);
+  timer5Interval = setInterval(() => {
+    time2 = Math.floor((Date.now() - startedAt) / 1000);
+    document.getElementById('timer5').innerText = formatTime(time2);
+  }, 250);
+}
+
+function finishReading2() {
+  clearInterval(timer5Interval);
+  setHidden('step5', true);
+  setHidden('step6', false);
+
+  const diff = time1 - time2;
+  const speedDiffEl = document.getElementById('speed-diff');
+  if (diff > 0) {
+    speedDiffEl.innerHTML = `⏱ 1回目: ${time1}秒 → 2回目: ${time2}秒 <span style="color:#16a34a;">(${diff}秒 短縮！)</span><br>チャンクの塊でスムーズに処理できました！`;
+  } else {
+    speedDiffEl.innerHTML = `⏱ 1回目: ${time1}秒 / 2回目: ${time2}秒<br>精読して文脈をしっかり確認できました。`;
+  }
+
+  currentQuizIndex = 0;
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+  const q = lesson.questions[currentQuizIndex];
+  if (!q) {
+    finishSession();
+    return;
+  }
+
+  document.getElementById('quiz-progress').innerText = `問 ${currentQuizIndex + 1} / ${lesson.questions.length}`;
+  document.getElementById('quiz-question').innerText = q.q;
+  document.getElementById('quiz-explanation').style.display = 'none';
+  setHidden('btn-next-quiz', true);
+
+  const optBox = document.getElementById('quiz-options');
+  optBox.innerHTML = '';
+
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.innerText = `${idx + 1}. ${opt}`;
+    btn.onclick = () => checkQuiz(idx, btn);
+    optBox.appendChild(btn);
+  });
+}
+
+function checkQuiz(selectedIdx, btnEl) {
+  const q = lesson.questions[currentQuizIndex];
+  const allBtns = document.querySelectorAll('#quiz-options .quiz-option');
+  allBtns.forEach(b => b.disabled = true);
+
+  const expBox = document.getElementById('quiz-explanation');
+  if (q.explanation) {
+    expBox.innerHTML = `<b>💡 解説:</b> ${escapeHtml(q.explanation)}`;
+    expBox.style.display = 'block';
+  }
+
+  if (selectedIdx === q.answer) {
+    btnEl.classList.add('correct');
+  } else {
+    btnEl.classList.add('wrong');
+    if (allBtns[q.answer]) allBtns[q.answer].classList.add('correct');
+    state.weak.comprehension = (state.weak.comprehension || 0) + 1;
+    save();
+  }
+
+  const nextBtn = document.getElementById('btn-next-quiz');
+  if (currentQuizIndex + 1 < lesson.questions.length) {
+    nextBtn.innerText = '次の問題へ';
+  } else {
+    nextBtn.innerText = 'セッション結果を見る';
+  }
+  setHidden('btn-next-quiz', false);
+}
+
+function nextQuiz() {
+  currentQuizIndex++;
+  if (currentQuizIndex < lesson.questions.length) {
+    renderQuizQuestion();
+  } else {
+    finishSession();
+  }
+}
+
+function finishSession() {
+  state.sessions = (state.sessions || 0) + 1;
+  const speedRatio = time1 > 0 ? (time2 / time1).toFixed(2) : "1.00";
+
+  state.history.push({
+    date: new Date().toISOString(),
+    topic: lesson.topic,
+    time1,
+    time2,
+    reflection: selectedReflection
+  });
+  if (state.history.length > 50) state.history.shift();
+  save();
+
+  setHidden('step6', true);
+  setHidden('step-complete', false);
+
+  document.getElementById('session-summary-box').innerHTML = `
+    <b>📊 本日のスコア</b><br>
+    トピック: <b>${escapeHtml(lesson.topic || "英語読解")}</b><br>
+    初見読解: <b>${time1}秒</b> ➔ 再読: <b>${time2}秒</b><br>
+    処理速度改善率: <b>${Math.round((1 - time2/Math.max(time1,1))*100)}% 短縮</b>
+  `;
+}
+
+function formatTime(s) {
+  const min = String(Math.floor(s / 60)).padStart(2, '0');
+  const sec = String(s % 60).padStart(2, '0');
+  return `${min}:${sec}`;
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
