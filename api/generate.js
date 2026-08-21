@@ -10,10 +10,10 @@ export default async function handler(req, res) {
     });
   }
 
- // 変更後
+ // 無料枠で安定稼働するFlashモデルに限定
   const candidateModels = [
     "gemini-3.6-flash",
-    "gemini-3.1-pro-preview"
+    "gemini-2.5-flash"
   ];
   
   const { profile } = req.body || {};
