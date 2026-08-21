@@ -95,6 +95,7 @@
   .btn-rate-mid { background: #fef3c7; color: #92400e; }
   .btn-rate-bad { background: #fee2e2; color: #991b1b; }
   .hidden { display: none !important; }
+  
   .collocation-item {
     background: #f8fafc;
     border: 1px solid var(--border);
@@ -104,6 +105,7 @@
   }
   .collocation-title { font-weight: 700; color: var(--primary-dark); font-size: 15px; }
   .collocation-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  
   .passage-box {
     font-size: 16px;
     line-height: 1.85;
@@ -142,6 +144,7 @@
   .quiz-option:active { background: #f1f5f9; }
   .quiz-option.correct { background: #dcfce7 !important; border-color: #86efac; color: #166534; font-weight: bold; }
   .quiz-option.wrong { background: #fee2e2 !important; border-color: #fca5a5; color: #991b1b; }
+  
   .mode-toggle { display: flex; background: #f1f5f9; padding: 3px; border-radius: 10px; margin-bottom: 12px; }
   .mode-btn {
     flex: 1;
@@ -181,20 +184,34 @@
 <div class="container">
   <div class="header">
     <h1>英語 読解・チャンクトレーナー</h1>
-    <p>AI自動生成 × 弱点適応トレーニング</p>
+    <p>語彙インプット ➔ 初見読解 ➔ 解説 ➔ 再読</p>
   </div>
 
+  <!-- LOADING -->
   <div id="step-loading" class="card">
     <div class="spinner"></div>
-    <p id="loading-msg" style="text-align:center; font-size:14px; color:var(--text-muted);">あなたの弱点に合わせてAIが教材を生成中…</p>
+    <p id="loading-msg" style="text-align:center; font-size:14px; color:var(--text-muted);">AIが今回の教材を生成中…</p>
   </div>
 
+  <!-- STEP 1: COLLOCATION FIRST -->
   <div id="step1" class="card hidden">
     <span class="topic-tag" id="step1-topic">Topic</span>
-    <span class="step-badge">STEP 1 / 6 : 短文ウォームアップ</span>
-    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">辞書を使わず前から読み、理解度を評価してください。</p>
-    <div id="step1-sentence" class="sentence-box">Loading...</div>
-    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;" id="step1-progress">1 / 4</div>
+    <span class="step-badge">STEP 1 / 6 : 重要コロケーションの予習</span>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
+      まずは今回の文章でカギとなる「意味のかたまり」の意味を確認しましょう。
+    </p>
+    <div id="collocation-list-step1"></div>
+    <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="goToStep2()">意味を確認した ➔ 短文チェックへ</button>
+  </div>
+
+  <!-- STEP 2: WARMUP -->
+  <div id="step2" class="card hidden">
+    <span class="step-badge">STEP 2 / 6 : 短文チェック</span>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
+      予習した表現を含む短文です。スッと前から理解できるか判定してください。
+    </p>
+    <div id="step2-sentence" class="sentence-box">Loading...</div>
+    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;" id="step2-progress">1 / 4</div>
     <div class="btn-group">
       <button class="btn btn-rate-good" onclick="rateWarmup('◎')">◎ スッと理解</button>
       <button class="btn btn-rate-mid" onclick="rateWarmup('△')">△ 遅かった</button>
@@ -205,20 +222,18 @@
     </div>
   </div>
 
-  <div id="step2" class="card hidden">
-    <span class="step-badge">STEP 2 / 6 : コロケーション確認</span>
-    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">単語単体ではなく「意味のかたまり」で定着させます。</p>
-    <div id="collocation-list"></div>
-    <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="goToStep3()">STEP 3 (初見読解) へ進む</button>
-  </div>
-
+  <!-- STEP 3: FIRST READING -->
   <div id="step3" class="card hidden">
     <span class="step-badge">STEP 3 / 6 : 1回目の読解 (初見)</span>
-    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">戻り読みをせず、推測しながら前から一気に読んでください。</p>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
+      戻り読みをせず、推測しながら前から一気に読み切ってください。
+    </p>
+    
     <div class="mode-toggle">
       <button id="mode-normal-3" class="mode-btn active" onclick="switchReadingMode(3, 'normal')">全文表示</button>
       <button id="mode-chunk-3" class="mode-btn" onclick="switchReadingMode(3, 'chunk')">チャンク送り(戻り防止)</button>
     </div>
+
     <div class="timer-display" id="timer3">00:00</div>
     <div class="passage-box" id="passage-step3" onclick="advanceChunk(3)"></div>
     <div id="chunk-controls-3" style="display:flex; justify-content:space-between; margin-bottom:12px;" class="hidden">
@@ -228,9 +243,11 @@
     <button id="btn-finish-read1" class="btn btn-primary" style="width:100%;" onclick="finishReading1()">読み終わった！</button>
   </div>
 
+  <!-- STEP 4: ANALYSIS & DETAILED COLLOCATIONS -->
   <div id="step4" class="card hidden">
-    <span class="step-badge">STEP 4 / 6 : つまずき分析</span>
+    <span class="step-badge">STEP 4 / 6 : つまずき分析 & 表現の解説</span>
     <div id="read1-summary" style="font-size:15px; font-weight:700; color:var(--primary-dark); margin-bottom:12px;"></div>
+    
     <p style="font-size: 13px; color: var(--text-muted); margin:0 0 8px 0;"><b>1回目の読解で、一番近かった感覚はどれですか？</b></p>
     <div style="display:grid; gap:8px; margin-bottom:16px;">
       <button class="quiz-option" onclick="recordReflection('smooth', this)">✨ ほぼ前からスムーズに意味が入った</button>
@@ -238,20 +255,27 @@
       <button class="quiz-option" onclick="recordReflection('slip', this)">💨 目が先に滑って意味処理が追いつかなかった</button>
       <button class="quiz-option" onclick="recordReflection('hold', this)">🧩 前半の内容を忘れて読み直した</button>
     </div>
-    <div style="font-size: 13px; background:#eff6ff; padding:12px; border-radius:10px; margin-bottom:14px;">
-      <b>📌 重要表現のおさらい:</b>
-      <div id="step4-collocation-items" style="margin-top:6px;"></div>
+
+    <div style="font-size: 13px; background:#eff6ff; padding:14px; border-radius:12px; margin-bottom:14px; border:1px solid #bfdbfe;">
+      <b style="color:var(--primary-dark); font-size:14px;">📖 本文で使われたコロケーションの詳しい解説:</b>
+      <div id="step4-collocation-items" style="margin-top:8px;"></div>
     </div>
-    <button id="btn-to-step5" class="btn btn-primary" style="width:100%;" onclick="goToStep5()" disabled>感覚を選んで STEP 5 へ</button>
+
+    <button id="btn-to-step5" class="btn btn-primary" style="width:100%;" onclick="goToStep5()" disabled>感覚を選んで STEP 5 (再読) へ</button>
   </div>
 
+  <!-- STEP 5: RE-READ -->
   <div id="step5" class="card hidden">
     <span class="step-badge">STEP 5 / 6 : 2回目の読解 (再読)</span>
-    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">1回目より「速く・楽に意味が入ってくる感覚」を味わってください。</p>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top:0;">
+      解説を確認した今、1回目より「英語の語順のままスルスル入る感覚」を味わってください。
+    </p>
+
     <div class="mode-toggle">
       <button id="mode-normal-5" class="mode-btn active" onclick="switchReadingMode(5, 'normal')">全文表示</button>
       <button id="mode-chunk-5" class="mode-btn" onclick="switchReadingMode(5, 'chunk')">チャンク送り(戻り防止)</button>
     </div>
+
     <div class="timer-display" id="timer5">00:00</div>
     <div class="passage-box" id="passage-step5" onclick="advanceChunk(5)"></div>
     <div id="chunk-controls-5" style="display:flex; justify-content:space-between; margin-bottom:12px;" class="hidden">
@@ -261,6 +285,7 @@
     <button class="btn btn-primary" style="width:100%;" onclick="finishReading2()">読み終わった！</button>
   </div>
 
+  <!-- STEP 6: QUIZ -->
   <div id="step6" class="card hidden">
     <span class="step-badge">STEP 6 / 6 : 内容理解クイズ</span>
     <div id="speed-diff" style="font-size: 13px; color: #166534; background:#dcfce7; padding:10px 12px; border-radius:10px; margin-bottom:14px; font-weight:bold;"></div>
@@ -273,16 +298,18 @@
     </div>
   </div>
 
+  <!-- COMPLETE -->
   <div id="step-complete" class="card hidden" style="text-align:center;">
     <h2 style="color:var(--accent); margin-top:0; font-size:20px;">🎉 セッション完了！</h2>
     <p style="font-size:13px; color:var(--text-muted);">
-      今回のつまずきと読解速度が記録されました。<br>
-      苦手な表現は次回のAI生成レッスンに反映されます。
+      今回のつまずきと読解速度データが蓄積されました。<br>
+      苦手な表現は次回のAI教材に自然に再登場します。
     </p>
     <div style="background:#f8fafc; padding:12px; border-radius:12px; font-size:13px; margin:14px 0; border:1px solid var(--border);" id="session-summary-box"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="init()">次のAIセッションを生成する</button>
   </div>
 
+  <!-- WEAKNESS DASHBOARD -->
   <div class="dashboard-card" id="dashboard">
     <div style="font-weight:700; color:var(--text-muted); margin-bottom:6px; display:flex; justify-content:space-between;">
       <span>📊 学習履歴 & 弱点ストック</span>
@@ -293,7 +320,7 @@
 </div>
 
 <script>
-const STORE = "english_reading_trainer_v_ai";
+const STORE = "english_reading_trainer_v6";
 let state = JSON.parse(localStorage.getItem(STORE) || "null") || {
   sessions: 0,
   level: 2,
@@ -369,17 +396,36 @@ async function init() {
   }
 
   setHidden('step-loading', true);
+  showStep1();
+}
+
+function showStep1() {
+  setHidden('step1', false);
+  document.getElementById('step1-topic').innerText = lesson.topic || "英語読解";
+  const list = document.getElementById('collocation-list-step1');
+  list.innerHTML = '';
+
+  const items = lesson.keyCollocations || [];
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'collocation-item';
+    div.innerHTML = `<div class="collocation-title">${escapeHtml(item.collocation)}</div><div class="collocation-desc">${escapeHtml(item.desc)}</div>`;
+    list.appendChild(div);
+  });
+}
+
+function goToStep2() {
+  setHidden('step1', true);
+  setHidden('step2', false);
   currentWarmupIndex = 0;
   userWarmupRates = [];
   renderWarmup();
 }
 
 function renderWarmup() {
-  setHidden('step1', false);
   const w = lesson.warmups[currentWarmupIndex];
-  document.getElementById('step1-topic').innerText = lesson.topic || "英語読解";
-  document.getElementById('step1-sentence').innerText = w.text;
-  document.getElementById('step1-progress').innerText = `問題 ${currentWarmupIndex + 1} / ${lesson.warmups.length}`;
+  document.getElementById('step2-sentence').innerText = w.text;
+  document.getElementById('step2-progress').innerText = `問題 ${currentWarmupIndex + 1} / ${lesson.warmups.length}`;
   const backBtn = document.getElementById('btn-warmup-back');
   if (backBtn) backBtn.disabled = (currentWarmupIndex === 0);
 }
@@ -398,14 +444,6 @@ function prevWarmup() {
       }
     }
     renderWarmup();
-  }
-}
-
-function prevChunk(step) {
-  if (readingMode[step] !== 'chunk') return;
-  if (currentChunkIndex[step] > 0) {
-    currentChunkIndex[step]--;
-    renderPassage(step);
   }
 }
 
@@ -428,26 +466,23 @@ function rateWarmup(rate) {
   if (currentWarmupIndex < lesson.warmups.length) {
     renderWarmup();
   } else {
-    showStep2();
+    goToStep3();
   }
 }
 
-function showStep2() {
-  setHidden('step1', true);
-  setHidden('step2', false);
+function goToStep3() {
+  setHidden('step2', true);
+  setHidden('step3', false);
+  currentChunkIndex[3] = 0;
+  renderPassage(3);
 
-  const list = document.getElementById('collocation-list');
-  list.innerHTML = '';
-
-  const focusList = userWarmupRates.filter(x => x.rate !== '◎');
-  const itemsToShow = (focusList.length > 0 ? focusList : lesson.warmups).slice(0, 4);
-
-  itemsToShow.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'collocation-item';
-    div.innerHTML = `<div class="collocation-title">${escapeHtml(item.collocation)}</div><div class="collocation-desc">${escapeHtml(item.desc)}</div>`;
-    list.appendChild(div);
-  });
+  time1 = 0;
+  startedAt = Date.now();
+  clearInterval(timer3Interval);
+  timer3Interval = setInterval(() => {
+    time1 = Math.floor((Date.now() - startedAt) / 1000);
+    document.getElementById('timer3').innerText = formatTime(time1);
+  }, 250);
 }
 
 function switchReadingMode(step, mode) {
@@ -492,19 +527,12 @@ function advanceChunk(step) {
   }
 }
 
-function goToStep3() {
-  setHidden('step2', true);
-  setHidden('step3', false);
-  currentChunkIndex[3] = 0;
-  renderPassage(3);
-
-  time1 = 0;
-  startedAt = Date.now();
-  clearInterval(timer3Interval);
-  timer3Interval = setInterval(() => {
-    time1 = Math.floor((Date.now() - startedAt) / 1000);
-    document.getElementById('timer3').innerText = formatTime(time1);
-  }, 250);
+function prevChunk(step) {
+  if (readingMode[step] !== 'chunk') return;
+  if (currentChunkIndex[step] > 0) {
+    currentChunkIndex[step]--;
+    renderPassage(step);
+  }
 }
 
 function finishReading1() {
@@ -514,13 +542,19 @@ function finishReading1() {
 
   document.getElementById('read1-summary').innerText = `1回目の読解タイム: ${time1}秒`;
   
+  // Render detailed collocations in Step 4
   const colBox = document.getElementById('step4-collocation-items');
-  colBox.innerHTML = (lesson.keyCollocations || []).map(c => `<div>・<b style="color:#1d4ed8;">${escapeHtml(c.collocation)}</b> : ${escapeHtml(c.desc)}</div>`).join('');
+  colBox.innerHTML = (lesson.keyCollocations || []).map(c => `
+    <div style="margin-bottom:8px;">
+      <b style="color:#1d4ed8; font-size:14px;">・${escapeHtml(c.collocation)}</b>
+      <div style="color:#334155; margin-left:14px;">${escapeHtml(c.desc)}</div>
+    </div>
+  `).join('');
 
   selectedReflection = null;
   const btn = document.getElementById('btn-to-step5');
   btn.disabled = true;
-  btn.innerText = '感覚を選んで STEP 5 へ';
+  btn.innerText = '感覚を選んで STEP 5 (再読) へ';
   document.querySelectorAll('#step4 .quiz-option').forEach(b => b.classList.remove('correct'));
 }
 
@@ -560,9 +594,9 @@ function finishReading2() {
   const diff = time1 - time2;
   const speedDiffEl = document.getElementById('speed-diff');
   if (diff > 0) {
-    speedDiffEl.innerHTML = `⏱ 1回目: ${time1}秒 → 2回目: ${time2}秒 <span style="color:#16a34a;">(${diff}秒 短縮！)</span><br>チャンクの塊でスムーズに処理できました！`;
+    speedDiffEl.innerHTML = `⏱ 1回目: ${time1}秒 → 2回目: ${time2}秒 <span style="color:#16a34a;">(${diff}秒 短縮！)</span><br>解説をインプットしたことで、前からスムーズに処理できました！`;
   } else {
-    speedDiffEl.innerHTML = `⏱ 1回目: ${time1}秒 / 2回目: ${time2}秒<br>精読して文脈をしっかり確認できました。`;
+    speedDiffEl.innerHTML = `⏱ 1回目: ${time1}秒 / 2回目: ${time2}秒<br>精読して文構造をしっかり確認できました。`;
   }
 
   currentQuizIndex = 0;
